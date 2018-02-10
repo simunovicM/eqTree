@@ -1,0 +1,360 @@
+﻿<!doctype html>
+<html>
+<head>
+<style>
+	.test {
+		background-color: #d9534f;
+		color: white;
+		-webkit-animation-name: example; /* Safari 4.0 - 8.0 */
+		-webkit-animation-duration: 4s; /* Safari 4.0 - 8.0 */
+		animation-name: example;
+		animation-duration: 4s;
+	}
+
+	/* Safari 4.0 - 8.0 */
+	@-webkit-keyframes example {
+		0%   {background-color: yellow;}
+		50%  {background-color: #d9534f;}
+	}
+
+	/* Standard syntax */
+	@keyframes example {
+		0%   {background-color: yellow;}
+		50%  {background-color: #d9534f;}
+	}
+</style>
+	<script src="jquery-3.1.1.js"></script>
+	<script src="eqTree.js"></script>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<script src="tether.min.js"></script>
+	<script src="bootstrap.min.js"></script>
+    <script src="js.storage.min.js"></script>
+	
+    <link href="iChemistry/NewStyle/commonV4.css" rel="stylesheet" />
+    <link href="iChemistry/NewStyle/jquery-ui.css" rel="stylesheet" />
+    <link href="iChemistry/NewStyle/chosen.css" rel="stylesheet" />
+    <link href="iChemistry/NewStyle/custom-uiV4.css" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+</head>
+<body>
+<nav class="row" id="MainMenuContainer">
+
+<ul id="MainMenuList" class="d-flex flex-row flex-wrap justify-content-start align-items-baseline">
+	
+<li id="ButtonRefresh" style="display: list-item;"><a href="#:" onclick="javascript:Refresh();">Refresh</a></li><li id="ButtonOK" style="display: list-item;"><a href="#:" onclick="javascript:AcceptChange();" class="Disabled" disabled="disabled">OK</a></li><li id="ButtonCancel" style="display: list-item;"><a href="#:" onclick="javascript:CancelChange();" class="Disabled" disabled="disabled">Cancel</a></li></ul></nav>
+<div id="buttons" class="buttons btn-group pb-2">
+    <a id="Add" class="mainButton btn" onclick="SetEnviroment(SetAddEnvironment, this);" href="#">Add</a>
+    <a id="Rename" class="mainButton btn" onclick="SetEnviroment(SetRenameEnvironment, this);" href="#:">Rename</a>
+    <a id="Move" class="mainButton btn" onclick="SetEnviroment(SetMoveEnvironment, this);" href="#">Move</a>
+    <a id="Delete" class="mainButton btn" onclick="SetEnviroment(SetDeleteEnvironment, this);" href="#">Delete</a>
+</div>
+
+<div class="row p-3">
+    <b class="col-4 text-center">
+		Edit tree, sorted by name
+    </b>
+    <b class="col-4 text-center">
+		Simple select tree
+    </b>
+    <b class="col-4 text-center">
+		Filtered -> Name starts with i or m
+    </b>
+    <div id="jstree" class="jstree jstree-1 jstree-default col-4">
+    </div>
+    <div id="jstree2" class="jstree jstree-1 jstree-default col-4">
+    </div>
+    <div id="jstree3" class="jstree jstree-1 jstree-default col-4">
+    </div>
+</div>
+<script src="treeData.js"></script>
+<script>
+    var idFnc = function (f) { return Math.abs(HashCode(f.KeyID + ':' + f.KeyID_mdbID + ':' + f.StartDate)) };
+    var iconFnc = function (f) { return "iChemistry/~master/new_style_images/v4/tree/{0}.png".formatUnicorn(f.Icon ? f.Icon : "tree-department"); };
+	var findFnc = function (f, arr) {
+		return arr.find(function (g) { return f.Parent == g.KeyID && f.Parent_mdbID == g.KeyID_mdbID; });
+	}
+	
+	var treeSubject = new equilibrium.DataSubject();
+	departments.forEach(function (f, ind) {
+		f.id = idFnc(f);
+		f.icon = iconFnc(f);
+	});
+	treeSubject.treedata = equilibrium.Node.FromArray(departments, findFnc).first();
+
+    function DrawFncEditOrLabel(f) { return f.Checked ? DrawEditNode(f) : DrawLabel(f); };
+    function DrawFncStrikethroughNodeLabelOrInsert(f) { return f.Checked ? DrawStrikethroughNode(f) : f.Temporary ? DrawInsertedNode(f) : DrawLabel(f); };
+
+    function DrawIcon(f, onclick) { return '<i {2} style="background-image: url({1}); background-position: center center; background-size: auto;" role="presentation" class="jstree-icon jstree-themeicon jstree-themeicon-custom"></i>'.formatUnicorn(f.id, EncodeWithQuota(f.icon), onclick); }
+    function drawTemplate(nod, drawFnc) { return '<div class="jstree-anchor {0}">'.formatUnicorn((nod.NodeLevel < 3 || (!nod.Checked && nod.Temporary)) ? 'disabled' : '') + DrawIcon(nod, 'onclick="OnClick(\'{0}\')"'.formatUnicorn(nod.id)) + drawFnc(nod) + '</div>'; };
+    function DrawPureLabel(f) {
+        return DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<label class="pl-1 {2}" onclick="SelectNode(\'{0}\')" >{1}</label>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'text-danger' : '');
+    }
+	function DrawDiv(f) {
+        return DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<div class="jstree-anchor" onclick="SelectNode(\'{0}\')" ><label class="pl-1 pr-1 rounded {2}">{1}</label><button class="btn-danger rounded-circle">{3}</button></div>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'test' : '', f.NodeLevel);
+    }
+    function DrawLabel(nod) {
+        return drawTemplate(nod, function (f) { return '<label class="pl-1 {2}" onclick="OnClick(\'{1}\')">{0}</label>'.formatUnicorn(Encode(f.Name), f.id, f.Checked ? 'text-danger' : ''); });
+    }
+    function DrawDisabledChkLabel(nod) {
+        return drawTemplate(nod, function (f) { return '<label class="pl-1" disabled>{0}</label>'.formatUnicorn(Encode(f.Name)); });
+    }
+    function DrawCheckBoxNode(nod) {
+        return drawTemplate(nod, function (f) { return '<input type="checkbox" onclick="OnClick(\'{0}\')" {1} {3}><label onclick="OnClick(\'{0}\')" class="pl-1">{2}</label>'.formatUnicorn(f.id, f.Checked ? 'checked' : '', Encode(f.Name), f.NodeLevel < 3 ? 'disabled' : ''); });
+    }
+    function DrawStrikethroughNode(nod) {
+        return drawTemplate(nod, function (f) { return '<s onclick="OnClick(\'{0}\')" class="pl-1">{1}</s>'.formatUnicorn(f.id, Encode(f.Name)); });
+    }
+    function DrawInsertedNode(nod) {
+        return drawTemplate(nod, function (f) { return '<ins class="pl-1">{1}</ins>'.formatUnicorn(f.id, Encode(f.Name)); });
+    }
+    function DrawEditNode(nod) {
+        return drawTemplate(nod, function (f) { return '<input class="col-5" value="{0}"><a href="#:" class="btn btn-info" onclick="AcceptChange(\'{1}\', this)">Done</a><a href="#:" class="btn btn-danger" onclick="CancelChange(\'{1}\')">Cancel</a>'.formatUnicorn(EncodeWithQuota(f.Name), f.id); });
+    }
+
+	var treeObserver = new equilibrium.eqTreeObserver(new equilibrium.eqTree($('#jstree'), DrawLabel), 'treedata');
+    var treeObserver2 = new equilibrium.eqTreeObserver(new equilibrium.eqTree($('#jstree2'), DrawPureLabel), 'treedata');
+    treeObserver2.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }) });
+    var treeObserver3 = new equilibrium.eqTreeObserver(new equilibrium.eqTree($('#jstree3'), DrawDiv), 'treedata');
+    treeObserver3.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }).filterAny(function (f) { return f.Name.trim().toLowerCase().startsWith('i') ||  f.Name.trim().toLowerCase().startsWith('m'); }) });
+
+    treeSubject.AddObserver(treeObserver);
+    treeSubject.AddObserver(treeObserver2);
+    treeSubject.AddObserver(treeObserver3);
+
+    var EnableDisableMenu = EmptyFunction;
+    function EnableDisableOkMenu(enable) {
+        $('#ButtonOK').toggle(enable);
+    };
+    function EnableDisableCancelMenu(enable) {
+        $('#ButtonCancel').toggle(enable);
+    };
+    treeSubject.AddObserver(new equilibrium.SimpleObserver(function () { EnableDisableMenu(); }));
+
+	treeObserver.AddFilter(function (nod) { return nod.sortby(function (f) { return f.Name.trim(); }); });
+	treeObserver.GetTree().OpenNode(treeSubject.treedata)
+	treeSubject.Notify();
+
+    function SelectNode(id) {
+        treeObserver2.GetAllData().forEach(function (f) { f.Selected = false; });
+        var nod = treeObserver2.GetAllData().find(function (f) { return f.id == id });
+        nod.Selected = true;
+        treeSubject.Notify();
+    };
+    function CheckedChanged(id) {
+        treeObserver.GetAllData().forEach(function (f) { f.Checked = false; });
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id });
+        nod.Checked = true;
+        treeSubject.Notify();
+    };
+    var OnClick = CheckedChanged;
+
+
+    function ClearAllActiveButtons() {
+        $('#buttons a').toggleClass('active', false);
+    }
+    function CancelAll() {
+        ClearAllActiveButtons();
+        treeObserver.GetTree().DrawingFnc = DrawLabel;
+        OnClick = CheckedChanged;
+        DeleteTemporaryNode();
+
+        EnableDisableOkMenu(false);
+        EnableDisableCancelMenu(false);
+
+        DeleteTemporaryNode = EmptyFunction;
+        AcceptChange = EmptyFunction;
+        CancelChange = EmptyFunction;
+        EnableDisableMenu = EmptyFunction;
+
+        treeSubject.Notify();
+    }
+    function SetEnviroment(fnc, control) {
+        if (control.className.indexOf('active') >= 0) {
+            treeObserver.GetAllData().forEach(function (f) { f.Checked = false; });
+            CancelAll();
+        }
+        else {
+            CancelAll();
+            control.className = control.className.toggle('active', true);
+            fnc();
+        }
+    }
+    var AcceptChange = EmptyFunction;
+    var CancelChange = EmptyFunction;
+
+    function SetAddEnvironment() {
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        AcceptChange = AcceptAddChange;
+        CancelChange = CancelAddChange;
+        OnClick = OnClickAdd;
+
+        var find = treeObserver.GetAllData().find(function (f) { return f.Checked; });
+        if (find) {
+            find.Checked = false;
+            OnClick(find.id);
+        } else treeSubject.Notify();
+    };
+    function OnClickAdd(id) {
+        OnClick = EmptyFunction;
+
+		var find = treeObserver.GetAllData().find(function (f) { return f.Checked; });
+        if (!find) {
+			var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+			var newNode = new equilibrium.Node();
+			newNode.id = RandomLetters(6);
+			newNode.Checked = true;
+			newNode.Name = '';
+			newNode.icon = iconFnc(newNode);
+			newNode.Temporary = true;
+			nod.AddChild(newNode);
+			treeObserver.GetTree().OpenNode(nod);
+			treeSubject.Notify();
+		};
+    };
+    function AcceptAddChange(id, control) {
+        OnClick = OnClickAdd;
+
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        nod.Name = $(control).parent().find('input').val();
+        nod.Checked = false;
+        nod.Temporary = false;
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        treeSubject.Notify();
+    };
+    function CancelAddChange(id) {
+        OnClick = OnClickAdd;
+
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        nod.GetParent().children.remove(nod);
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        treeSubject.Notify();
+    };
+
+    function SetRenameEnvironment() {
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        AcceptChange = AcceptNameChange;
+        CancelChange = CancelNameChange;
+        OnClick = CheckedEditChanged;
+        treeSubject.Notify();
+    };
+    function CheckedEditChanged(id) {
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        nod.Checked = !nod.Checked;
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        treeSubject.Notify();
+    };
+    function AcceptNameChange(id, control) {
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        nod.Name = $(control).parent().find('input').val();
+        nod.Checked = false;
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        treeSubject.Notify();
+    };
+    function CancelNameChange(id) {
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        nod.Checked = false;
+        treeObserver.GetTree().DrawingFnc = DrawFncEditOrLabel;
+        treeSubject.Notify();
+    };
+
+    function SetMoveEnvironment() {
+        OnClick = CheckedMoveChanged;
+        treeObserver.GetTree().DrawingFnc = DrawFncStrikethroughNodeLabelOrInsert;
+        CancelChange = CancelMoveChange;
+
+        EnableDisableMenu = function () {
+            var hasCheckedData = treeObserver.GetAllData().find(function (f) { return f.Checked; }) != null;
+            EnableDisableOkMenu(hasCheckedData);
+            EnableDisableCancelMenu(hasCheckedData);
+        }
+
+        treeSubject.Notify();
+    };
+    function CheckedMoveChanged(id) {
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        if (nod.Checked) {
+            DeleteTemporaryNode();
+            nod.Checked = false;
+        } else {
+            var checked = treeObserver.GetAllData().find(function (f) { return f.Checked; });
+
+            if (checked == null)
+                nod.Checked = true;
+            else TemporaryMove(checked, nod);
+        }
+        treeSubject.Notify();
+    };
+    function TemporaryMove(fromNode, toNode) {
+        DeleteTemporaryNode();
+
+        var tempNode = DeepClone(fromNode);
+        tempNode.id = 'tempNode';
+        tempNode.Checked = false;
+        tempNode.Temporary = true;
+        toNode.AddChild(tempNode);
+        treeObserver.GetTree().OpenNode(toNode);
+
+        DeleteTemporaryNode = function () { tempNode.GetParent().children.remove(tempNode); }
+        AcceptChange = function () {
+            DeleteTemporaryNode();
+            AcceptChange = EmptyFunction;
+            DeleteTemporaryNode = EmptyFunction;
+
+            fromNode.GetParent().children.remove(fromNode);
+            fromNode.Checked = false;
+            toNode.AddChild(fromNode);
+
+            treeSubject.Notify();
+        };
+
+        treeSubject.Notify();
+    }
+    var DeleteTemporaryNode = EmptyFunction;
+    function CancelMoveChange(id) {
+        DeleteTemporaryNode();
+        DeleteTemporaryNode = EmptyFunction;
+
+        treeObserver.GetAllData().forEach(function (f) { f.Checked = false; });
+        treeSubject.Notify();
+    };
+
+    function SetDeleteEnvironment() {
+        OnClick = CheckedDeleteChanged;
+        treeObserver.GetTree().DrawingFnc = DrawCheckBoxNode;
+        AcceptChange = AcceptDeleteChange;
+        CancelChange = CancelDeleteChange;
+
+        EnableDisableMenu = function () {
+            var hasCheckedData = treeObserver.GetAllData().find(function (f) { return f.Checked; }) != null;
+            EnableDisableOkMenu(hasCheckedData);
+            EnableDisableCancelMenu(hasCheckedData);
+        }
+
+        treeSubject.Notify();
+    };
+    function CheckedDeleteChanged(id) {
+        var nod = treeObserver.GetAllData().find(function (f) { return f.id == id; });
+        nod.Checked = !nod.Checked;
+        treeSubject.Notify();
+    };
+    function AcceptDeleteChange(id, control) {
+        equilibrium.Node.ToArray(treeObserver.GetAllData())
+            .filter(function (f) { return f.Checked; })
+            .forEach(function (f) { f.GetParent().children.remove(f); });
+        treeSubject.Notify();
+    };
+    function CancelDeleteChange(id) {
+        treeObserver.GetAllData().forEach(function (f) { f.Checked = false; });
+        treeSubject.Notify();
+    };
+    $('#MainMenuList').children().remove();
+    $('#MainMenuList').append($('<li id="ButtonRefresh" style="display: list-item;"><a href="#:" onclick="javascript:Refresh();">Refresh</a></li>'));
+    $('#MainMenuList').append($('<li id="ButtonOK" style="display: list-item;"><a href="#:" onclick="javascript:AcceptChange();">OK</a></li>'));
+    $('#MainMenuList').append($('<li id="ButtonCancel" style="display: list-item;"><a href="#:" onclick="javascript:CancelChange();">Cancel</a></li>'));
+    function Refresh() {
+        LoadPageInMain('http://localhost/iChemistry/Settings/Test');
+    }
+	EnableDisableOkMenu(false);
+	EnableDisableCancelMenu(false);
+</script>
+</body>

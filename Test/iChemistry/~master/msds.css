@@ -1,0 +1,71 @@
+.MainContWrapper #MainContDiv .MainTbl #MainContentContainer, .MainContWrapper .MainTbl #MainContentContainer {width:100%;}
+#MSDS {background-color:#fff; background-image:none; font-family:Arial,sans-serif; font-size:10pt; filter:none;}
+#MSDS table, #MSDS td {font-family:Arial,sans-serif; font-size:10pt; font-weight:normal; line-height:1.2; vertical-align:top;}
+#MSDS .vBottom {vertical-align:bottom;}
+.removeOnPages {display:none;}
+
+#pageTitleBox {position:relative;}
+#MSDS .headerTable {border-bottom:2px solid #000; table-layout:fixed;}
+#MSDS .headerTable th {vertical-align:top;}
+#MSDS .headerTable th div {margin:3px;}
+#MSDS .headerTable td {padding-bottom:2px; vertical-align:middle;}
+#MSDS .headerTable .leftHeaderColumn {width:195px; font-size:9pt;}
+#MSDS .headerTable .leftHeaderColumn .msdslogo {padding-right:15px; text-align:left;}
+#MSDS .headerTable .middleHeaderColumn div {text-align:center;}
+#MSDS .headerTable .middleHeaderColumn .title {font-size:12pt; font-weight:bold;}
+#MSDS .headerTable .middleHeaderColumn .SmallHeader {font-size:10.5pt; font-style:italic; font-weight:normal;}
+#MSDS .headerTable .middleHeaderColumn .productName {font-size:14.25pt; font-weight:bold;}
+#MSDS .headerTable .createdBy {position:absolute; left:0; bottom:0;}
+#MSDS .headerTable .dates {float:right; margin-bottom:0; padding-bottom:0; font-size:10pt; text-align:left;}
+#MSDS .headerTable .rightHeaderColumn {width:230px; vertical-align:bottom;}
+#MSDS .headerTable .rightHeaderColumn table td {font-size:9pt;}
+#MSDS .headerTable .rightHeaderColumn table td.first {width:140px; padding-right:10px; text-align:right;}
+#MSDS .headerTable .msdslogo img {max-width:100%; height:auto;}
+
+#MSDS .SectionContainer {position:relative; margin:0 auto; overflow:hidden;}
+#MSDS .SectionContainer .mainTitle {margin:20px 0 0; padding:2px; background-color:#d7dde8; border-top:2px solid #000; font-size:14pt; font-weight:bold;}
+#MSDS .SectionBody {padding:2px; font-size:10pt;}
+#MSDS .SectionBody table {width:auto;}
+#MSDS .SectionBody th {vertical-align:top;}
+#MSDS .SectionBody td {padding:5px; word-wrap:break-word; -webkit-hyphens:auto; -moz-hyphens:auto; -ms-hyphens:auto; hyphens:auto; overflow-wrap:break-word;}
+#MSDS .SectionBody td.SubGroupTitle {padding-top:10px; font-size:10.5pt; font-style:italic;}
+#MSDS .SectionBody td.TitleCell, #MSDS .detailedTbl th {width:200px; padding-right:10px; background-color:#e1e1e1; border:2px solid #fff; border-width:2px 0; font-weight:bold; text-align:right;}
+#MSDS .SectionBody td.GroupTitle {padding-left:50px; font-weight:bold; text-decoration:underline;}
+#MSDS .SectionBody td.SubRowTitle {width:200px; padding-right:10px; text-align:right;}
+#MSDS .SectionBody td.FullRow {text-align:left;}
+#MSDS .SectionBody td.EmptyTable {font-weight:bold; text-align:center;}
+#MSDS .SectionBody table th, #MSDS .SectionBody table td {font-size:9pt; word-wrap:break-word; -webkit-hyphens:auto; -moz-hyphens:auto; -ms-hyphens:auto; hyphens:auto; overflow-wrap:break-word;}
+#MSDS .SectionBody table th, #MSDS .SectionBody table td.Header {font-style:italic; font-weight:bold; text-align:left;}
+
+#MSDS .SectionBody .HorizantalInformationTable, #MSDS .HorizantalInformationTable {width:100%; border:1px solid #000; table-layout:fixed;}
+#MSDS .SectionBody .HorizantalInformationTable th, #MSDS .SectionBody .HorizantalInformationTable td, #MSDS .HorizantalInformationTable th, #MSDS .HorizantalInformationTable td {padding:5px 10px; background-color:#fff; border:1px solid #000;}
+#MSDS .SectionBody .HorizantalInformationTable th.Header, #MSDS .SectionBody .HorizantalInformationTable td.Header, #MSDS .HorizantalInformationTable th.Header, #MSDS .HorizantalInformationTable td.Header {background-color:#e1e1e1;}
+
+#MSDS .DangerCodeTable {font-family:Arial,sans-serif; font-size:10pt; font-weight:normal;}
+#MSDS td.DangerCodeCell {width:70px; text-align:center;}
+#MSDS td.DangerCodeCell span, #MSDS td.DangerCodeCell img {display:block; margin:0 auto; font-size:8pt;}
+
+#MSDS .ExposureLimits.ResultTable {width:100%; margin:0; border:1px solid #000; /*table-layout:fixed;*/}
+#MSDS .ExposureLimits.ResultTable tr:first-child td, #MSDS .ExposureLimits.tablesorter tr:first-child td, #MSDS .ExposureLimits th, #MSDS .ExposureLimits td {border:1px solid #000;}
+#MSDS .ExposureLimits.ResultTable th, #MSDS .ExposureLimits td.Header {background-color:#e2e2e2;}
+#MSDS .ExposureLimits.ResultTable td {padding:4px; word-break:break-all;}
+#MSDS .ExposureLimits.ResultTable tr:hover td, #MSDS .ExposureLimits.ResultTable tr td:hover {background:transparent;}
+
+#MSDS .detailedTbl {margin-left:10px; border:1px solid #e1e1e1;}
+#MSDS .detailedTbl th {width:185px; padding:5px 10px; background-color:#f3f3f3; border-width:2px 0 0; font-size:9pt; vertical-align:middle;}
+#MSDS .detailedTbl td {border-top:2px solid #e1e1e1;}
+#MSDS .detailedTbl .first th, #MSDS .detailedTbl .first td, #MSDS .detailedTbl .first:hover td, #MSDS .detailedTbl .first td:hover {background:#e2e2e2; border-color:#e2e2e2; border-top:2px solid #fff;}
+#MSDS .detailedTbl .first td, #MSDS .detailedTbl .first td:hover {border-bottom:2px solid #fff;}
+
+#MSDS span.headerAdditionalInfo {font-size:10pt;}
+#MSDS .NotTranslatedPhrase {color:#f00; font-weight:bold; word-wrap:break-word; -webkit-hyphens:auto; -moz-hyphens:auto; -ms-hyphens:auto; hyphens:auto; overflow-wrap:break-word;}
+
+@media not print {
+	#MSDS {padding-bottom:10px;}
+}
+@media print {
+	html, body {overflow:hidden;}
+	#MSDS .SectionContainer .mainTitle {page-break-inside:avoid; page-break-after:auto;}
+	#MSDS .ExposureLimits.ResultTable th, #MSDS .ExposureLimits td {border:1px solid #000 !important;}
+	#MSDS .ExposureLimits.ResultTable th, #MSDS .ExposureLimits td.Header {background-color:#e2e2e2 !important; word-break:break-all;}
+}
