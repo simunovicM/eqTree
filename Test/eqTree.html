@@ -85,12 +85,12 @@
     function DrawFncStrikethroughNodeLabelOrInsert(f) { return f.Checked ? DrawStrikethroughNode(f) : f.Temporary ? DrawInsertedNode(f) : DrawLabel(f); };
 
     function DrawIcon(f, onclick) { return '<i {2} style="background-image: url({1}); background-position: center center; background-size: auto;" role="presentation" class="jstree-icon jstree-themeicon jstree-themeicon-custom"></i>'.formatUnicorn(f.id, EncodeWithQuota(f.icon), onclick); }
-    function drawTemplate(nod, drawFnc) { return '<div class="jstree-anchor {0}">'.formatUnicorn((nod.NodeLevel < 3 || (!nod.Checked && nod.Temporary)) ? 'disabled' : '') + DrawIcon(nod, 'onclick="OnClick(\'{0}\')"'.formatUnicorn(nod.id)) + drawFnc(nod) + '</div>'; };
+    function drawTemplate(nod, drawFnc) { return $('<div class="jstree-anchor {0}">'.formatUnicorn((nod.NodeLevel < 3 || (!nod.Checked && nod.Temporary)) ? 'disabled' : '') + DrawIcon(nod, 'onclick="OnClick(\'{0}\')"'.formatUnicorn(nod.id)) + drawFnc(nod) + '</div>')[0]; };
     function DrawPureLabel(f) {
-        return DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<label class="pl-1 {2}" onclick="SelectNode(\'{0}\')" >{1}</label>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'text-danger' : '');
+        return $.makeArray($(DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<label class="pl-1 {2}" onclick="SelectNode(\'{0}\')" >{1}</label>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'text-danger' : '')));
     }
 	function DrawDiv(f) {
-        return DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<div class="jstree-anchor" onclick="SelectNode(\'{0}\')" ><label class="pl-1 pr-1 rounded {2}">{1}</label><button class="btn-danger rounded-circle">{3}</button></div>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'test' : '', f.NodeLevel);
+        return $.makeArray($(DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<div class="jstree-anchor" onclick="SelectNode(\'{0}\')" ><label class="pl-1 pr-1 rounded {2}">{1}</label><button class="btn-danger rounded-circle">{3}</button></div>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'test' : '', f.NodeLevel)));
     }
     function DrawLabel(nod) {
         return drawTemplate(nod, function (f) { return '<label class="pl-1 {2}" onclick="OnClick(\'{1}\')">{0}</label>'.formatUnicorn(Encode(f.Name), f.id, f.Checked ? 'text-danger' : ''); });
@@ -111,10 +111,10 @@
         return drawTemplate(nod, function (f) { return '<input class="col-5" value="{0}"><a href="#:" class="btn btn-info" onclick="AcceptChange(\'{1}\', this)">Done</a><a href="#:" class="btn btn-danger" onclick="CancelChange(\'{1}\')">Cancel</a>'.formatUnicorn(EncodeWithQuota(f.Name), f.id); });
     }
 
-	var treeObserver = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree'), DrawLabel), 'treedata');
-    var treeObserver2 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree2'), DrawPureLabel), 'treedata');
+	var treeObserver = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree')[0], DrawLabel), 'treedata');
+    var treeObserver2 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree2')[0], DrawPureLabel), 'treedata');
     treeObserver2.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }) });
-    var treeObserver3 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree3'), DrawDiv), 'treedata');
+    var treeObserver3 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree3')[0], DrawDiv), 'treedata');
     treeObserver3.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }).filterAny(function (f) { return f.Name.trim().toLowerCase().startsWith('i') ||  f.Name.trim().toLowerCase().startsWith('m'); }) });
 
     treeSubject.AddObserver(treeObserver);
