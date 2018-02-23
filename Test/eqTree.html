@@ -111,10 +111,10 @@
         return drawTemplate(nod, function (f) { return '<input class="col-5" value="{0}"><a href="#:" class="btn btn-info" onclick="AcceptChange(\'{1}\', this)">Done</a><a href="#:" class="btn btn-danger" onclick="CancelChange(\'{1}\')">Cancel</a>'.formatUnicorn(EncodeWithQuota(f.Name), f.id); });
     }
 
-	var treeObserver = new equilibrium.eqTreeObserver(new equilibrium.eqTree($('#jstree'), DrawLabel), 'treedata');
-    var treeObserver2 = new equilibrium.eqTreeObserver(new equilibrium.eqTree($('#jstree2'), DrawPureLabel), 'treedata');
+	var treeObserver = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree'), DrawLabel), 'treedata');
+    var treeObserver2 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree2'), DrawPureLabel), 'treedata');
     treeObserver2.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }) });
-    var treeObserver3 = new equilibrium.eqTreeObserver(new equilibrium.eqTree($('#jstree3'), DrawDiv), 'treedata');
+    var treeObserver3 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree3'), DrawDiv), 'treedata');
     treeObserver3.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }).filterAny(function (f) { return f.Name.trim().toLowerCase().startsWith('i') ||  f.Name.trim().toLowerCase().startsWith('m'); }) });
 
     treeSubject.AddObserver(treeObserver);

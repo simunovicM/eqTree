@@ -222,14 +222,20 @@ if (!String.prototype.endsWith) {
     }
 }
 if (!Array.prototype.groupBy)
-	Array.prototype.groupBy = function(propFnc) {
-	   return this.reduce(function(groups, item) {
-		 var val = propFnc(item);
-		 groups[val] = groups[val] || [];
-		 groups[val].push(item);
-		 return groups;
-	   }, {})
-	}
+Array.prototype.groupBy = function (propFnc) {
+return this .reduce( function (groups, item) {
+var val = propFnc(item);
+groups[val] = groups[val] || [];
+groups[val].push(item);
+return groups;
+}, []);
+};
+if (!Array.prototype.unique)
+Array.prototype.unique = function (propFnc) {
+return this .groupBy(propFnc)
+.filter( function (f) { return f != null })
+.map( function (f) { return f.first(); });
+};
 if (!String.prototype.trim) {
     String.prototype.trim = function () { return $.trim(this); }
 }
@@ -285,7 +291,18 @@ if (!HashCode)
         }
         return hash;
     }
-	
+Number.prototype.RangeTo = function (intTo) {
+    var intFrom = parseInt(this);
+    var step = intFrom <= intTo ? 1 : -1;
+    var ret = [];
+    do {
+        ret.push(intFrom);
+        if (intFrom == intTo)
+            break;
+        intFrom += step;
+    } while (true);
+    return ret;
+}
 equilibrium = this['equilibrium'] == null ? new Object() : this['equilibrium'];
 equilibrium.DataSubject = function () {
     var observers = [];
@@ -315,196 +332,226 @@ equilibrium.SimpleObserver = function(fn) {
         fn();
     }
 }
-equilibrium.Node = function() {
-	var self = this;
-	this.children = [];
-	this.AddChild = function (child) {
-		child.GetParent = function () { return self; };
-		child.parentId = this.id;
-		this.children.push(child);
-	}
-	this.GetNodeLevel = function () {
-		return this.parentId == null ? 0 : this.GetParent().GetNodeLevel() + 1;
-	}
-	this.GetTopParent = function () {
-		if (self.GetParent == null)
-			return self;
-		return self.GetParent().GetTopParent();
-	}
-	this.RemoveParent = function () {
-		self.parentId = null;
-		self.GetParent = null;
-		return self;
-	}
-	this.map = function (fnc) {
-		var ret = equilibrium.CopyAllProperties(fnc(this), new equilibrium.Node());
-		ret.children = [];
-		this.children.forEach(function (g) {
-			ret.AddChild(g.map(fnc));
-		});
-		return ret;
-	}
-	this.filter = function (fnc) {
-		if (!fnc(this)) return null;
-		var ret = equilibrium.CopyAllProperties(DeepClone(this), new equilibrium.Node());
-		ret.children = [];
-		this.children.forEach(function (g) {
-			var ch = g.filter(fnc);
-			if (ch) ret.AddChild(ch);
-		});
-		return ret;
-	}
-	this.filterAny = function (fnc) {
-		var ret = equilibrium.CopyAllProperties(DeepClone(this), new equilibrium.Node());
-		ret.children = [];
-		this.children.forEach(function (g) {
-			var ch = g.filterAny(fnc);
-			if (ch) ret.AddChild(ch);
-		});
-		if (IsNotNullAndHasAny(ret.children) || fnc(this)) return ret;
-	}
-	this.sortby = function (prop, sortFnc) {
-		var ret = equilibrium.CopyAllProperties(DeepClone(this), new equilibrium.Node());
-		ret.children = [];
-		this.children.sortby(prop).forEach(function (g) {
-			var clonedNode = g.sortby(prop, sortFnc);
-			ret.AddChild(clonedNode);
-		});
-		return ret;
-	}
-	this.find = function (fnc) {
-		if (fnc(this)) return this;
-		for (var i = 0; i < this.children.length; i++) {
-			var find = this.children[i].find(fnc);
-			if (find != null)
-				return find;
-		}
-	}
-	this.forEach = function (fnc) {
-		fnc(this);
-		this.children.forEach(function (g) { g.forEach(fnc); });
-		return this;
-	}
-	var nodeArrNodeFnc = function (node, arrFnc) {
-		var arr = DeepCloneArray(arrFnc(Node.ToArray(node)));
-		arr.forEach(function (f) { f.children = []; });
-		return Node.FromArray(arr, function (f, arr) { return arr.find(function (g) { return f.parentId && f.parentId == g.id }); }).first();
-	}
-	var nodeArrFnc = function (node, arrFnc) {
-		return arrFnc(Node.ToArray(node));
-	}
+
+equilibrium.Node = function () {
+    var self = this;
+    this.children = [];
+    this.AddChild = function (child) {
+        child.GetParent = function () { return self; };
+        this.children.push(child);
+    }
+    this.GetNodeLevel = function () {
+        return this.GetParent == null ? 0 : this.GetParent().GetNodeLevel() + 1;
+    }
+    this.GetTopParent = function () {
+        if (self.GetParent == null)
+            return self;
+        return self.GetParent().GetTopParent();
+    }
+    this.RemoveParent = function () {
+        self.GetParent = null;
+        return self;
+    }
 }
 equilibrium.Node.ToArray = function (node) {
-	if (arr == null)
-		var arr = [];
-	arr.push(node);
-	if (node.children != null)
-		node.children.forEach(function (f) { return equilibrium.Node.ToArray(f).forEach(function (g) { arr.push(g); }); });
-	return arr;
+    if (arr == null)
+        var arr = [];
+    arr.push(node);
+    if (node.children != null)
+        node.children.forEach(function (f) { return equilibrium.Node.ToArray(f).forEach(function (g) { arr.push(g); }); });
+    return arr;
 }
 equilibrium.Node.FromArray = function (arr, findParentFnc) {
-	arr.forEach(function (f) { f.children = []; });
-	arr = DeepCloneArray(arr).map(function (f) { return equilibrium.CopyAllProperties(f, new equilibrium.Node()); });
-	arr.forEach(function (f) {
-		var parent = findParentFnc(f, arr);
-		if (parent != null)
-			parent.AddChild(f);
-	});
-	return arr.filter(function (f) { return f.parentId == null; });
+    arr.forEach(function (f) { f.children = []; });
+    arr = DeepCloneArray(arr).map(function (f) { return equilibrium.CopyAllProperties(f, new equilibrium.Node()); });
+    arr.forEach(function (f) {
+        var parent = findParentFnc(f, arr);
+        if (parent != null)
+            parent.AddChild(f);
+    });
+    return arr.filter(function (f) { return f.GetParent == null; });
+}
+equilibrium.Node.map = function (node) {
+    return function(fnc) {
+        var ret = equilibrium.CopyAllProperties(fnc(node), new equilibrium.Node());
+        ret.children = [];
+        if (node.children)
+            node.children.forEach(function (g) {
+                ret.AddChild(equilibrium.Node.map(g)(fnc));
+            });
+        return ret;
+    }
+}
+equilibrium.Node.filter = function (node) {
+    return function(fnc) {
+        if (!fnc(node)) return null;
+        var ret = equilibrium.CopyAllProperties(DeepClone(node), new equilibrium.Node());
+        ret.children = [];
+        if (node.children)
+            node.children.forEach(function (g) {
+                var ch = equilibrium.Node.filter(g)(fnc);
+                if (ch) ret.AddChild(ch);
+            });
+        return ret;
+    }
+}
+equilibrium.Node.filterAny = function(node) {
+    return function(fnc) {
+        var ret = equilibrium.CopyAllProperties(DeepClone(node), new equilibrium.Node());
+        ret.children = [];
+        if (node.children)
+            node.children.forEach(function(g) {
+                var ch = equilibrium.Node.filterAny(g)(fnc);
+                if (ch) ret.AddChild(ch);
+            });
+        if (IsNotNullAndHasAny(ret.children) || fnc(node)) return ret;
+    }
+}
+equilibrium.Node.sortby = function(node) {
+    return function(prop, sortFnc) {
+        var ret = equilibrium.CopyAllProperties(DeepClone(node), new equilibrium.Node());
+        ret.children = [];
+        if (node.children)
+            node.children.sortby(prop).forEach(function (g) {
+                var clonedNode = equilibrium.Node.sortby(g)(prop, sortFnc);
+                ret.AddChild(clonedNode);
+            });
+        return ret;
+    }
+}
+equilibrium.Node.find = function (node) {
+    return function(fnc) {
+        if (fnc(node)) return node;
+        if (node.children)
+            for (var i = 0; i < node.children.length; i++) {
+                var find = equilibrium.Node.find(node.children[i])(fnc);
+                if (find != null)
+                    return find;
+            }
+    }
+}
+equilibrium.Node.forEach = function(node) {
+    return function(fnc) {
+        fnc(node);
+        if (node.children)
+            node.children.forEach(function (g) { equilibrium.Node.forEach(g)(fnc); });
+        return this;
+    }
+}
+equilibrium.Node.prototype.map = function (fnc) { return equilibrium.Node.map(this)(fnc); };
+equilibrium.Node.prototype.filter = function (fnc) { return equilibrium.Node.filter(this)(fnc); };
+equilibrium.Node.prototype.filterAny = function (fnc) { return equilibrium.Node.filterAny(this)(fnc); };
+equilibrium.Node.prototype.sortby = function (prop, sortFnc) { return equilibrium.Node.sortby(this)(prop, sortFnc); };
+equilibrium.Node.prototype.find = function (fnc) { return equilibrium.Node.find(this)(fnc);};
+equilibrium.Node.prototype.forEach = function (fnc) { return equilibrium.Node.forEach(this)(fnc); };
+equilibrium.Node.prototype.ToArray = function () { return equilibrium.Node.ToArray(this); };
+
+equilibrium.Tree = function (treeDiv, drawingFnc) {
+    var self = this;
+    var _data = null;
+
+    this.DrawingFnc = drawingFnc ? drawingFnc : function (f) { return f.text; };
+    this.GetData = function () {
+        return _data;
+    }
+    this.Redraw = function (dat) {
+        _data = dat;
+        var isOpened = function (nod) { return IsNotNullAndHasAny(nod.children) && getState(nod.id).opened; };
+        var getClass = function (nod) { return IsNotNullAndHasAny(nod.children) ? (isOpened(nod) ? 'jstree-open' : 'jstree-closed') : 'jstree-leaf' }
+        var ulFnc = function () {
+            var ulTemp = document.createElement('ul');
+            ulTemp.className = 'jstree-children';
+            return function () { return ulTemp.cloneNode(true) }
+        }();
+        var liFnc = function () {
+            var liTemp = document.createElement('ul');
+            liTemp.className = 'jstree-node';
+            var iTemp = document.createElement('i');
+            iTemp.className = 'jstree-icon jstree-ocl';
+            return function (nod) {
+                var liEl = liTemp.cloneNode(true);
+                liEl.id = nod.id;
+                liEl.classList.add(getClass(nod));
+                var iEl = iTemp.cloneNode(true);
+                iEl.onclick = function () { self.OnNodeOpenClick(nod); };
+                liEl.append(iEl);
+
+                ForEachObjOrArr(self.DrawingFnc(nod), function (f) { liEl.append(f); });
+
+                if (isOpened(nod)) {
+                    var childHtml = nod.children.map(liFnc);
+                    childHtml.last().classList.add('jstree-last');
+                    childHtml.forEach(function (f) { liEl.append(f); });
+                }
+                return liEl;
+            }
+        }();
+        var mappingFnc = function (f) {
+            var ulEl = ulFnc();
+            ulEl.append(liFnc(f));
+            return { html: ulEl };
+        };
+        var mapped = mappingFnc(dat).html;
+        mapped.className = 'jstree-container-ul';
+        mapped.firstElementChild.className += ' jstree-last';
+        equilibrium.ToArray(treeDiv.children).forEach(function (f) { f.parentNode.removeChild(f); })
+        treeDiv.append(mapped);
+    };
+
+    this.ClearAllStates = function () {
+        drawedData = new Object();
+        return self;
+    };
+    this.IsNodeOpened = function (node) {
+        return getState(node.id).opened;
+    };
+    this.OpenNode = function (node) {
+        if (IsNotNullAndHasAny(node.children))
+            getState(node.id).opened = true;
+        if (node.GetParent != null)
+            this.OpenNode(node.GetParent());
+        return self;
+    };
+    this.CloseNode = function (node) {
+        getState(node.id).opened = false;
+        return self;
+    };
+    this.GetContainer = function () { return treeDiv };
+
+    this.OnNodeOpenClick = function(nod) {
+        if (IsNotNullAndHasAny(nod.children)) {
+            getState(nod.id).opened = !getState(nod.id).opened;
+            self.Redraw(_data);
+        }
+    };
+
+    var drawedData = new Object();
+    var getState = function (id) {
+        if (drawedData[id] == null)
+            drawedData[id] = { opened: false };
+        return drawedData[id];
+    };
 }
 
-equilibrium.eqTree = function(treeDiv, drawingFnc) {
-	var self = this;
-	var _data = null;
-	var iClick = function (nod) {
-		if (IsNotNullAndHasAny(nod.children)) {
-			getState(nod.id).opened = !getState(nod.id).opened;
-			self.Redraw(_data);
-		}
-	}
+equilibrium.TreeObserver = function (tree, prop) {
+    var self = this;
+    var _tree = tree;
+    this.FilterFunctions = [];
+    var _data = null;
 
-	this.DrawingFnc = drawingFnc ? drawingFnc : function (f) { return f.text; };
-	this.GetData = function () {
-		return _data;
-	}
-	this.Redraw = function (dat) {
-		_data = dat;
-		var isOpened = function (nod) { return  IsNotNullAndHasAny(nod.children) && getState(nod.id).opened; };
-		var getClass = function (nod) { return IsNotNullAndHasAny(nod.children) ? (isOpened(nod) ? 'jstree-open' : 'jstree-closed') : 'jstree-leaf' }
-		var ulFnc = function () { return $('<ul class="jstree-children"></ul>'); };
-		var liFnc = function (nod) {
-			var liEl = $('<li class="jstree-node"><i class="jstree-icon jstree-ocl"></i></li>').attr('id', nod.id).addClass(getClass(nod));
-			liEl.find('i').on('click', function () { iClick(nod); });
-
-			var divEl = self.DrawingFnc(nod);
-			liEl.append(divEl);
-			if (isOpened(nod)) {
-				var childHtml = nod.children.map(liFnc);
-				childHtml.last().addClass('jstree-last');
-				liEl.append(childHtml);
-			}
-			return liEl;
-		};
-		var mappingFnc = function (f) {
-			var ulEl = ulFnc().append(liFnc(f));
-			return { html: ulEl };
-		};
-		var mapped = mappingFnc(dat).html;
-		mapped[0].className = 'jstree-container-ul';
-		mapped[0].children[0].className += ' jstree-last';
-		treeDiv.children().remove();
-		treeDiv.append(mapped);
-	};
-
-	this.ClearAllStates = function (treeData) {
-		drawedData = new Object();
-	};
-	this.OpenNode = function (node) {
-		if (IsNotNullAndHasAny(node.children))
-			getState(node.id).opened = true;
-		if (node.GetParent != null)
-			this.OpenNode(node.GetParent());
-		return node;
-	};
-
-	var drawedData = new Object();
-	var getState = function (id) {
-		if (drawedData[id] == null)
-			drawedData[id] = { opened: false };
-		return drawedData[id];
-	};
+    this.Update = function (data) {
+        _data = data;
+        _tree.Redraw(self.GetFilteredData());
+    }
+    this.GetAllData = function () { return _data ? _data[prop] : null; }
+    this.GetFilteredData = function () {
+        var filtered = _data[prop];
+        self.FilterFunctions.forEach(function (fnc) { filtered = fnc(filtered); });
+        return filtered;
+    }
+    this.AddFilter = function (filter) { self.FilterFunctions.push(filter); }
+    this.GetTree = function () { return _tree; }
 }
-
-equilibrium.eqTreeObserver = function(tree, prop) {
-	var self = this;
-	var _tree = tree;
-	this.FilterFunctions = [];
-	var _data = null;
-
-	this.Update = function (data) {
-		_data = data;
-		_tree.Redraw(self.GetFilteredData());
-	}
-	this.GetAllData = function () { return _data[prop]; }
-	this.GetFilteredData = function () {
-		var filtered = _data[prop];
-		self.FilterFunctions.forEach(function (fnc) { filtered = fnc(filtered); });
-		return filtered;
-	}
-	this.AddFilter = function (filter) { self.FilterFunctions.push(filter); }
-	this.GetTree = function () { return _tree; }
-}
-
-
-
-
-
-
-
-
-
-
-
 
 equilibrium.CopyValuesFromObject = function (fromObject, toObject) {
     for (var k in toObject) {
@@ -547,10 +594,14 @@ equilibrium.PropertiesToArray = function (fromObject) {
     return arr;
 }
 equilibrium.ToArray = function (fromObject) {
-    var arr = [];
-    for (var i = 0; i < fromObject.length; i++) arr.push(fromObject[i]);
-    return arr;
+    return fromObject.length == 0 ? [] : (0).RangeTo(fromObject.length - 1).map(function (f) { return fromObject[f]; });
 };
 
 
-function EmptyFunction() {}
+function EmptyFunction() { }
+
+function ForEachObjOrArr(obj, fn) {
+    if (Array.isArray(obj))
+        obj.forEach(fn);
+    else fn(obj);
+}
