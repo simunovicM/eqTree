@@ -153,13 +153,6 @@ if (!Array.prototype.sortby) {
         return retdata;
     }
 }
-if (!('pushMany' in Array.prototype)) {
-    Array.prototype.pushMany = function (arr) {
-        var self = this;
-        arr.forEach(function (f) { self.push(f); });
-        return self;
-    };
-}
 if (!Array.prototype.remove) {
     Array.prototype.remove = function (dat) {
         var ind = this.indexOf(dat);
@@ -229,20 +222,20 @@ if (!String.prototype.endsWith) {
     }
 }
 if (!Array.prototype.groupBy)
-Array.prototype.groupBy = function (propFnc) {
-return this .reduce( function (groups, item) {
-var val = propFnc(item);
-groups[val] = groups[val] || [];
-groups[val].push(item);
-return groups;
-}, []);
-};
+    Array.prototype.groupBy = function (propFnc) {
+        return this.reduce(function (groups, item) {
+            var val = propFnc(item);
+            groups[val] = groups[val] || [];
+            groups[val].push(item);
+            return groups;
+        }, []);
+    };
 if (!Array.prototype.unique)
-Array.prototype.unique = function (propFnc) {
-return this .groupBy(propFnc)
-.filter( function (f) { return f != null })
-.map( function (f) { return f.first(); });
-};
+    Array.prototype.unique = function (propFnc) {
+        return this.groupBy(propFnc)
+        .filter(function (f) { return f != null })
+        .map(function (f) { return f.first(); });
+    };
 if (!String.prototype.trim) {
     String.prototype.trim = function () { return $.trim(this); }
 }
@@ -298,18 +291,18 @@ if (!HashCode)
         }
         return hash;
     }
-Number.prototype.RangeTo = function (intTo) {
-    var intFrom = parseInt(this);
-    var step = intFrom <= intTo ? 1 : -1;
-    var ret = [];
-    do {
-        ret.push(intFrom);
-        if (intFrom == intTo)
-            break;
-        intFrom += step;
-    } while (true);
-    return ret;
-}
+    Number.prototype.RangeTo = function (intTo) {
+        var intFrom = parseInt(this);
+        var step = intFrom <= intTo ? 1 : -1;
+        var ret = [];
+        do {
+            ret.push(intFrom);
+            if (intFrom == intTo)
+                break;
+            intFrom += step;
+        } while (true);
+        return ret;
+    }
 equilibrium = this['equilibrium'] == null ? new Object() : this['equilibrium'];
 equilibrium.DataSubject = function () {
     var observers = [];
@@ -419,7 +412,7 @@ equilibrium.Node.sortby = function(node) {
         var ret = equilibrium.CopyAllProperties(DeepClone(node), new equilibrium.Node());
         ret.children = [];
         if (node.children)
-            node.children.sortby(prop).forEach(function (g) {
+            node.children.sortby(prop,sortFnc).forEach(function (g) {
                 var clonedNode = equilibrium.Node.sortby(g)(prop, sortFnc);
                 ret.AddChild(clonedNode);
             });
@@ -464,45 +457,50 @@ equilibrium.Tree = function (treeDiv, drawingFnc) {
     this.Redraw = function (dat) {
         _data = dat;
         var isOpened = function (nod) { return IsNotNullAndHasAny(nod.children) && getState(nod.id).opened; };
-        var getClass = function (nod) { return IsNotNullAndHasAny(nod.children) ? (isOpened(nod) ? 'jstree-open' : 'jstree-closed') : 'jstree-leaf' }
+        var getClass = function (nod) { return IsNotNullAndHasAny(nod.children) ? (isOpened(nod) ? 'eqtree-open' : 'eqtree-closed') : 'eqtree-leaf' }
         var ulFnc = function () {
             var ulTemp = document.createElement('ul');
-            ulTemp.className = 'jstree-children';
+            ulTemp.className = 'eqtree-children';
             return function () { return ulTemp.cloneNode(true) }
         }();
         var liFnc = function () {
-            var liTemp = document.createElement('ul');
-            liTemp.className = 'jstree-node';
+            var liTemp = document.createElement('li');
+            liTemp.className = 'eqtree-node';
             var iTemp = document.createElement('i');
-            iTemp.className = 'jstree-icon jstree-ocl';
+            iTemp.className = 'eqtree-icon eqtree-ocl';
             return function (nod) {
                 var liEl = liTemp.cloneNode(true);
                 liEl.id = nod.id;
                 liEl.classList.add(getClass(nod));
                 var iEl = iTemp.cloneNode(true);
                 iEl.onclick = function () { self.OnNodeOpenClick(nod); };
-                liEl.append(iEl);
+                liEl.appendChild(iEl);
 
-                ForEachObjOrArr(self.DrawingFnc(nod), function (f) { liEl.append(f); });
+                ForEachObjOrArr(self.DrawingFnc(nod), function (f) { liEl.appendChild(f); });
 
                 if (isOpened(nod)) {
+                    var ulChild = ulFnc();
                     var childHtml = nod.children.map(liFnc);
-                    childHtml.last().classList.add('jstree-last');
-                    childHtml.forEach(function (f) { liEl.append(f); });
+                    childHtml.last().classList.add('eqtree-last');
+                    childHtml.forEach(function (f) { ulChild.appendChild(f); });
+                    liEl.appendChild(ulChild);
                 }
                 return liEl;
             }
         }();
         var mappingFnc = function (f) {
             var ulEl = ulFnc();
-            ulEl.append(liFnc(f));
+            ulEl.appendChild(liFnc(f));
             return { html: ulEl };
         };
         var mapped = mappingFnc(dat).html;
-        mapped.className = 'jstree-container-ul';
-        mapped.firstElementChild.className += ' jstree-last';
-        equilibrium.ToArray(treeDiv.children).forEach(function (f) { f.parentNode.removeChild(f); })
-        treeDiv.append(mapped);
+        mapped.className = 'eqtree-container-ul';
+        mapped.firstElementChild.className += ' eqtree-last';
+        mapped.firstElementChild.firstElementChild.className += ' rootName';
+        if (dat.children.length == 0)
+            mapped.firstElementChild.firstElementChild.className += ' noChild';
+        equilibrium.ToArray(treeDiv.children).forEach(function (f) { f.parentNode.removeChild(f); });
+        treeDiv.appendChild(mapped);
     };
 
     this.ClearAllStates = function () {
@@ -611,4 +609,20 @@ function ForEachObjOrArr(obj, fn) {
     if (Array.isArray(obj))
         obj.forEach(fn);
     else fn(obj);
+}
+function StringSorter(a, b) {
+    var arrA = equilibrium.ToArray(a);
+    var arrB = equilibrium.ToArray(b);
+    for (var i = 0; i < arrA.length; i++) {
+        var ch1 = arrA[i];
+        var ch2 = arrB.length > i ? arrB[i] : '';
+        var ch1Low = ch1.toLowerCase();
+        var ch2Low = ch2.toLowerCase();
+        if (ch1Low > ch2Low) return true;
+        if (ch1Low < ch2Low) return false;
+        if (ch1 > ch2) return true;
+        if (ch1 < ch2) return false;
+    }
+    if (arrB.length > arrA.length)
+        return false;
 }

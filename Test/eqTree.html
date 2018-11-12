@@ -34,7 +34,7 @@
     <link href="iChemistry/NewStyle/jquery-ui.css" rel="stylesheet" />
     <link href="iChemistry/NewStyle/chosen.css" rel="stylesheet" />
     <link href="iChemistry/NewStyle/custom-uiV4.css" rel="stylesheet" />
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+	<link rel="stylesheet" href="eqTree.css" />
 </head>
 <body>
 <nav class="row" id="MainMenuContainer">
@@ -59,11 +59,11 @@
     <b class="col-4 text-center">
 		Filtered -> Name starts with i or m
     </b>
-    <div id="jstree" class="jstree jstree-1 jstree-default col-4">
+    <div id="eqtree" class="eqtree eqtree-1 eqtree-default col-4">
     </div>
-    <div id="jstree2" class="jstree jstree-1 jstree-default col-4">
+    <div id="eqtree2" class="eqtree eqtree-1 eqtree-default col-4">
     </div>
-    <div id="jstree3" class="jstree jstree-1 jstree-default col-4">
+    <div id="eqtree3" class="eqtree eqtree-1 eqtree-default col-4">
     </div>
 </div>
 <script src="treeData.js"></script>
@@ -84,13 +84,13 @@
     function DrawFncEditOrLabel(f) { return f.Checked ? DrawEditNode(f) : DrawLabel(f); };
     function DrawFncStrikethroughNodeLabelOrInsert(f) { return f.Checked ? DrawStrikethroughNode(f) : f.Temporary ? DrawInsertedNode(f) : DrawLabel(f); };
 
-    function DrawIcon(f, onclick) { return '<i {2} style="background-image: url({1}); background-position: center center; background-size: auto;" role="presentation" class="jstree-icon jstree-themeicon jstree-themeicon-custom"></i>'.formatUnicorn(f.id, EncodeWithQuota(f.icon), onclick); }
-    function drawTemplate(nod, drawFnc) { return $('<div class="jstree-anchor {0}">'.formatUnicorn((nod.NodeLevel < 3 || (!nod.Checked && nod.Temporary)) ? 'disabled' : '') + DrawIcon(nod, 'onclick="OnClick(\'{0}\')"'.formatUnicorn(nod.id)) + drawFnc(nod) + '</div>')[0]; };
+    function DrawIcon(f, onclick) { return '<i {2} style="background-image: url({1}); background-position: center center; background-size: auto;" role="presentation" class="eqtree-icon eqtree-themeicon eqtree-themeicon-custom"></i>'.formatUnicorn(f.id, EncodeWithQuota(f.icon), onclick); }
+    function drawTemplate(nod, drawFnc) { return $('<span class="eqtree-anchor {0}">'.formatUnicorn((nod.NodeLevel < 3 || (!nod.Checked && nod.Temporary)) ? 'disabled' : '') + DrawIcon(nod, 'onclick="OnClick(\'{0}\')"'.formatUnicorn(nod.id)) + drawFnc(nod) + '</span>')[0]; };
     function DrawPureLabel(f) {
         return $.makeArray($(DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<label class="pl-1 {2}" onclick="SelectNode(\'{0}\')" >{1}</label>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'text-danger' : '')));
     }
 	function DrawDiv(f) {
-        return $.makeArray($(DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<div class="jstree-anchor" onclick="SelectNode(\'{0}\')" ><label class="pl-1 pr-1 rounded {2}">{1}</label><button class="btn-danger rounded-circle">{3}</button></div>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'test' : '', f.NodeLevel)));
+        return $.makeArray($(DrawIcon(f, 'onclick="SelectNode(\'{0}\')"'.formatUnicorn(f.id)) + '<span class="eqtree-anchor" onclick="SelectNode(\'{0}\')" ><label class="pl-1 pr-1 rounded {2}">{1}</label><button class="btn-danger rounded-circle">{3}</button></span>'.formatUnicorn(f.id, Encode(f.Name), f.Selected ? 'test' : '', f.NodeLevel)));
     }
     function DrawLabel(nod) {
         return drawTemplate(nod, function (f) { return '<label class="pl-1 {2}" onclick="OnClick(\'{1}\')">{0}</label>'.formatUnicorn(Encode(f.Name), f.id, f.Checked ? 'text-danger' : ''); });
@@ -111,10 +111,10 @@
         return drawTemplate(nod, function (f) { return '<input class="col-5" value="{0}"><a href="#:" class="btn btn-info" onclick="AcceptChange(\'{1}\', this)">Done</a><a href="#:" class="btn btn-danger" onclick="CancelChange(\'{1}\')">Cancel</a>'.formatUnicorn(EncodeWithQuota(f.Name), f.id); });
     }
 
-	var treeObserver = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree')[0], DrawLabel), 'treedata');
-    var treeObserver2 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree2')[0], DrawPureLabel), 'treedata');
+	var treeObserver = new equilibrium.TreeObserver(new equilibrium.Tree($('#eqtree')[0], DrawLabel), 'treedata');
+    var treeObserver2 = new equilibrium.TreeObserver(new equilibrium.Tree($('#eqtree2')[0], DrawPureLabel), 'treedata');
     treeObserver2.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }) });
-    var treeObserver3 = new equilibrium.TreeObserver(new equilibrium.Tree($('#jstree3')[0], DrawDiv), 'treedata');
+    var treeObserver3 = new equilibrium.TreeObserver(new equilibrium.Tree($('#eqtree3')[0], DrawDiv), 'treedata');
     treeObserver3.AddFilter(function (nod) { return nod.filter(function (f) { return !f.Temporary; }).filterAny(function (f) { return f.Name.trim().toLowerCase().startsWith('i') ||  f.Name.trim().toLowerCase().startsWith('m'); }) });
 
     treeSubject.AddObserver(treeObserver);
